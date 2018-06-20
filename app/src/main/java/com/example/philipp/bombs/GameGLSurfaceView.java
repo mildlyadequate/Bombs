@@ -26,7 +26,9 @@ public class GameGLSurfaceView extends GLSurfaceView {
     private SceneRenderer renderer;
     public Context context;  // activity context
 
-    private static final int bombCount = 15;
+    private static int bombCount = 3;
+    private static int bombSpawnCooldown = 3;
+    private long bombSpawnTime = System.currentTimeMillis();
     private static final float minSpawnDistanceToPlayer = 1.5f;
     private static final float minSpawnDistanceBetweenBombs = 1.5f;
     private static final float bombMinScale = 0.8f;
@@ -212,15 +214,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
                     powerUp.setVelocity(-(powerUp.velocity[0]), powerUp.velocity[1], powerUp.velocity[2]);
 
                 }
-                if (powerUp.getZ() > boundaryTop + offset) {
-                    powerUpsToBeRemoved.add(powerUp);
-                }
             }
-            // remove obsolete obstacles
-            for (PowerUp powerUp : powerUpsToBeRemoved) {
-                powerUps.remove(powerUp);
-            }
-            powerUpsToBeRemoved.clear();
             for (PowerUp powerUp : powerUps) {
                 if (areColliding(ball, powerUp)) {
                     powerUpsToBeRemoved.add(powerUp);
@@ -263,26 +257,24 @@ public class GameGLSurfaceView extends GLSurfaceView {
                  */
 
                 // calculate source vertex position, <0.5 horizontal, else vertical
+                // calculate source vertex position,
+                spawnZ = ball.getZ() + 6.0f + spawnOffset;
                 if (Math.random() < 0.5) {
-                    spawnZ = ball.getZ() + 7.0f + spawnOffset;
                     spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
-                } else {  // vertical placing, left or right
-                    spawnZ = (ball.getZ() + 7.0f)* (float) Math.random();
+                } else {
                     spawnX = (sourceCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
                 }
 
                 // calculate destination vertex position, <0.5 horizontal, else vertical
-                if (Math.random() < 0.5) {  // horizontal placing, top or bottom
-                    velocity[2] = ball.getZ() - spawnOffset;
+                // horizontal placing, top or bottom
+                if (Math.random() < 0.5) {
                     velocity[0] = (destCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
-                } else {  // vertical placing, left or right
-                    velocity[2] = ball.getZ() * (float) Math.random();
+                } else {
                     velocity[0] = (destCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
                 }
 
                 // calculate velocity
                 velocity[0] -= spawnX;
-                velocity[2] -= spawnZ;
                 normalize(velocity);
 
                 boolean positionOk = true;
@@ -352,8 +344,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
                 float offset = bomb.scale;
 
                 if ((bomb.getX() > boundaryRight + offset)
-                        || (bomb.getX() < boundaryLeft - offset)
-                        || (bomb.getZ() > boundaryTop + offset)) {
+                        || (bomb.getX() < boundaryLeft - offset)) {
                         bombsToBeRemoved.add(bomb);
                 }
             }
@@ -440,12 +431,9 @@ public class GameGLSurfaceView extends GLSurfaceView {
 
 
             // Spawn new Bomb TODO minimize the Count at the beginning and rise the amount the further the Player gets down (rising difficulty)
-            if (bombCount > bombs.size()) {
-                for (int i = 0; i < bombCount - bombs.size(); ++i) {
-
+            long currentTime = System.currentTimeMillis();
+            if (bombCount > bombs.size() && (int) ((currentTime - bombSpawnTime) / 1000) >= bombSpawnCooldown) {
                     float scale = (float) Math.random() * (bombMaxScale - bombMinScale) + bombMinScale;
-
-
                     float spawnX = 0.0f;
                     float spawnZ = 0.0f;
                     float spawnOffset = scale * 0.5f;
@@ -464,27 +452,26 @@ public class GameGLSurfaceView extends GLSurfaceView {
                      * +----+----+
                      */
 
-                    // calculate source vertex position, <0.5 horizontal, else vertical
-                    if (Math.random() < 0.5) {
-                        spawnZ = boundaryTop + spawnOffset;
-                        spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
-                    } else {  // vertical placing, left or right
-                        spawnZ = boundaryTop * (float) Math.random();
-                        spawnX = (sourceCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
-                    }
+                    // calculate source vertex position,
+                     spawnZ = ball.getZ() + 9.0f + spawnOffset;
+                     if (Math.random() < 0.5) {
+                         spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
+                     } else {
+                         spawnX = (sourceCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
+                     }
 
                     // calculate destination vertex position, <0.5 horizontal, else vertical
-                    if (Math.random() < 0.5) {  // horizontal placing, top or bottom
-                        velocity[2] = boundaryBottom - spawnOffset;
+                     // horizontal placing, top or bottom
+                    if (Math.random() < 0.5) {
                         velocity[0] = (destCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
-                    } else {  // vertical placing, left or right
-                        velocity[2] = boundaryBottom * (float) Math.random();
+                    } else {
                         velocity[0] = (destCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
                     }
 
+
+
                     // calculate velocity
                     velocity[0] -= spawnX;
-                    velocity[2] -= spawnZ;
                     normalize(velocity);
 
 
@@ -504,20 +491,17 @@ public class GameGLSurfaceView extends GLSurfaceView {
                             Math.abs(spawnZ - ball.getZ()) < minPlayerDistance)
                         positionOk = false;    // Distance to player too small -> invalid position
 
-                    if (!positionOk)
-                        continue; // Invalid spawn position -> try again next time
-
-
-                    Bomb newBomb = new Bomb();
-                    newBomb.scale = scale;
-                    newBomb.randomizeRotationAxis();
-                    newBomb.angularVelocity = 50;
-                    newBomb.setPosition(spawnX, 0, spawnZ);
-                    newBomb.velocity = velocity;
-                    bombs.add(newBomb);
-
-
-                }
+                    if (positionOk) {
+                        Bomb newBomb = new Bomb();
+                        newBomb.scale = scale;
+                        newBomb.randomizeRotationAxis();
+                        newBomb.angularVelocity = 50;
+                        newBomb.setPosition(spawnX, 0, spawnZ);
+                        newBomb.velocity = velocity;
+                        bombs.add(newBomb);
+                        bombSpawnCooldown = 1 + (int) (Math.random() * ((8 - 1) + 1));
+                        bombSpawnTime = System.currentTimeMillis();
+                    }
             }
         }
         private void updateTerrain(float fracSec) {
@@ -526,7 +510,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
             terrain.setVelocity(0.0f,0.0f,0.0f);
             // add new Terrain at the bottom to ensure endless game
             for (Bomb bomb : bombs) {
-                if (bomb.getZ() < terrainLimit) {
+                if (bomb.getZ() < terrainLimit || ball.getZ() < terrainLimit) {
                     terrainLimit--;
                     terrain.addRow();
                 }

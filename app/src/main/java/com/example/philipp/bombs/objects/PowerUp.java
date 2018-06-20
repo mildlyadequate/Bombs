@@ -17,9 +17,10 @@ public class PowerUp extends GameObject {
     public float angularVelocity = 0.0f;
     public float rotationAxis[] = {0.0f, 1.0f, 0.0f};
     private int cooldown = 60 + (5 + (int)(Math.random() * ((60 - 5) + 1)));
-    private int decayTime = 10;
+    private int decayTime = 12;
+    private boolean decayed = false;
     private long creationTime = System.currentTimeMillis();
-    private float currentColor[] = new float[3];
+    private float currentColor[] = {0.05f, 0.8f, 1.0f};
 
     //@formatter:off
     private static final float powerUp_vertices[] = {
@@ -81,6 +82,7 @@ public class PowerUp extends GameObject {
             21, 22,
             22, 23,
             23, 24,
+            24, 25,
             25, 26,
             26, 27,
             27, 16
@@ -116,7 +118,6 @@ public class PowerUp extends GameObject {
     @Override
     public void draw(GL10 gl) {
         gl.glMatrixMode(GL10.GL_MODELVIEW);
-        getCurrentColor();
         gl.glPushMatrix();
         {
             gl.glMultMatrixf(transformationMatrix, 0);
@@ -128,7 +129,7 @@ public class PowerUp extends GameObject {
 
             gl.glRotatef(rotation, rotationAxis[0], rotationAxis[1], rotationAxis[2]);
             gl.glVertexPointer(3, GL10.GL_FLOAT, 0, powerUpVerticesBuffer);
-            gl.glColor4f(currentColor[0], currentColor[1], currentColor[2], 0);
+            setCurrentColor(gl);
             for (int i = 0; i < (powerUp_lines.length / 2); i++) {
                 powerUpTrianglesBuffer.position(2 * i);
                 gl.glDrawElements(GL10.GL_LINE_LOOP, 2, GL10.GL_UNSIGNED_SHORT, powerUpTrianglesBuffer);
@@ -152,32 +153,38 @@ public class PowerUp extends GameObject {
         rotationAxis[2] = 0.0f;
         normalize(rotationAxis);
     }
-    private void getCurrentColor() {
+    private void setCurrentColor(GL10 gl) {
+        float r, g, b;
         long currentTime = System.currentTimeMillis();
         if ((decayTime - 3) == (int) ((currentTime - creationTime) / 1000)) {
-            currentColor[0] = 0.0f;
-            currentColor[1] *= 0.75f;
-            currentColor[2] *= 0.75f;
+            r = currentColor[0] * 0.75f;
+            g = currentColor[1] * 0.75f;
+            b = currentColor[2] * 0.75f;
         } else if ((decayTime - 2) == (int) ((currentTime - creationTime) / 1000)) {
-            currentColor[0] = 0.0f;
-            currentColor[1] *= 0.5f;
-            currentColor[2] *= 0.5f;
+            r = currentColor[0] * 0.5f;
+            g = currentColor[1] * 0.5f;
+            b = currentColor[2] * 0.5f;
         } else if ((decayTime - 1) == (int) ((currentTime - creationTime) / 1000)) {
-            currentColor[0] = 0.0f;
-            currentColor[1] *= 0.25f;
-            currentColor[2] *= 0.25f;
+            r = currentColor[0] * 0.25f;
+            g = currentColor[1] * 0.25f;
+            b = currentColor[2] * 0.25f;
+        } else if (!decayed){
+            r = currentColor[0];
+            g = currentColor[1];
+            b = currentColor[2];
         } else {
-            currentColor[0] = 0.05f;
-            currentColor[1] = 0.8f;
-            currentColor[2] = 1.0f;
+            r = 0;
+            g = 0;
+            b = 0;
         }
+        gl.glColor4f(r, g, b, 0);
     }
     public boolean decay() {
         long currentTime = System.currentTimeMillis();
         if (decayTime == (int) ((currentTime - creationTime) / 1000)) {
-            return true;
+            decayed = true;
         }
-        return false;
+        return decayed;
     }
     public int getCooldown() {
         return cooldown;
