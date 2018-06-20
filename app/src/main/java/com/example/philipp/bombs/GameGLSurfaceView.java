@@ -28,6 +28,8 @@ public class GameGLSurfaceView extends GLSurfaceView {
 
     private static int bombCount = 3;
     private static int bombSpawnCooldown = 3;
+    private static int bombMaxCooldown = 10;
+    private static int bombMinCooldown = 3;
     private long bombSpawnTime = System.currentTimeMillis();
     private static final float minSpawnDistanceToPlayer = 1.5f;
     private static final float minSpawnDistanceBetweenBombs = 1.5f;
@@ -35,6 +37,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
     private static final float bombMaxScale = 1.2f;
     private static final float maxFallSpeed = -6.0f;
     private float terrainLimit = -2.0f;
+    private float difficultyLimit = -10.0f;
     private static float fallSpeed = 0f;
     private static boolean jump = false;
     private static boolean doubleJump = false;
@@ -45,7 +48,6 @@ public class GameGLSurfaceView extends GLSurfaceView {
     private PlayerBall ball = new PlayerBall();
     private PlayGround terrain = new PlayGround();
     private ArrayList<PowerUp> powerUps = new ArrayList<>();
-
 
     public GameGLSurfaceView(Context context) {
         super(context);
@@ -499,8 +501,17 @@ public class GameGLSurfaceView extends GLSurfaceView {
                         newBomb.setPosition(spawnX, 0, spawnZ);
                         newBomb.velocity = velocity;
                         bombs.add(newBomb);
-                        bombSpawnCooldown = 1 + (int) (Math.random() * ((8 - 1) + 1));
+                        bombSpawnCooldown = bombMinCooldown + (int) (Math.random() * ((bombMaxCooldown - bombMinCooldown) + 1));
                         bombSpawnTime = System.currentTimeMillis();
+                    }
+                    if (terrainLimit < difficultyLimit) {
+                        bombCount++;
+                        if (bombMaxCooldown > 2) {
+                            bombMaxCooldown--;
+                        }
+                        if (bombMinCooldown > 0 && terrainLimit < -50.0f) {
+                            bombMinCooldown--;
+                        }
                     }
             }
         }
