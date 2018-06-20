@@ -16,6 +16,7 @@ public class PowerUp extends GameObject {
     // rotation speed in deg/s
     public float angularVelocity = 0.0f;
     public float rotationAxis[] = {0.0f, 1.0f, 0.0f};
+    private int cooldown = 60 + (5 + (int)(Math.random() * ((60 - 5) + 1)));
     private int decayTime = 10;
     private long creationTime = System.currentTimeMillis();
     private float currentColor[] = new float[3];
@@ -39,6 +40,20 @@ public class PowerUp extends GameObject {
             0.191f, 0f, -0.462f,
             0.354f, 0f, -0.354f,
             0.462f, 0f, -0.191f,
+            0.191f, 0f, 0.28f,
+            -0.191f, 0f, 0.28f,
+            -0.191f, 0f, 0.191f,
+            -0.28f, 0f, 0.191f,
+            -0.28f, 0f, -0.191f,
+            -0.191f, 0f, -0.191f,
+            -0.191f, 0f, -0.28f,
+            0.191f, 0f, -0.28f,
+            0.191f, 0f, -0.191f,
+            0.28f, 0f, -0.191f,
+            0.28f, 0f, 0.191f,
+            0.191f, 0f, 0.191f,
+
+
 
     };
     private static final short powerUp_lines[] = {
@@ -57,7 +72,18 @@ public class PowerUp extends GameObject {
             12, 13,
             13, 14,
             14, 15,
-            15, 0
+            15, 0,
+            16, 17,
+            17, 18,
+            18, 19,
+            19, 20,
+            20, 21,
+            21, 22,
+            22, 23,
+            23, 24,
+            25, 26,
+            26, 27,
+            27, 16
 
     };
     //@formatter:on
@@ -126,7 +152,7 @@ public class PowerUp extends GameObject {
         rotationAxis[2] = 0.0f;
         normalize(rotationAxis);
     }
-    public void getCurrentColor() {
+    private void getCurrentColor() {
         long currentTime = System.currentTimeMillis();
         if ((decayTime - 3) == (int) ((currentTime - creationTime) / 1000)) {
             currentColor[0] = 0.0f;
@@ -141,9 +167,20 @@ public class PowerUp extends GameObject {
             currentColor[1] *= 0.25f;
             currentColor[2] *= 0.25f;
         } else {
-            currentColor[0] = 0.0f;
-            currentColor[1] = 0.75f;
+            currentColor[0] = 0.05f;
+            currentColor[1] = 0.8f;
             currentColor[2] = 1.0f;
         }
     }
+    public boolean decay() {
+        long currentTime = System.currentTimeMillis();
+        if (decayTime == (int) ((currentTime - creationTime) / 1000)) {
+            return true;
+        }
+        return false;
+    }
+    public int getCooldown() {
+        return cooldown;
+    }
+
 }

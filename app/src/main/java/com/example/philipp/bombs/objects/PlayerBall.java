@@ -405,6 +405,13 @@ public class PlayerBall extends GameObject {
         ringHealth = FULL_HEALTH;
         deathRotationVelocity = 1.0f;
     }
+    public void heal(float amount) {
+        if (ringHealth <= FULL_HEALTH - amount) {
+            ringHealth += amount;
+        } else if (ringHealth > FULL_HEALTH - amount){
+            ringHealth = FULL_HEALTH;
+        }
+    }
 
     @Override
     public void draw(GL10 gl) {

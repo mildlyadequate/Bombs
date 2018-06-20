@@ -19,6 +19,7 @@ import com.example.philipp.bombs.objects.PlayGroundTriangleDown;
 import com.example.philipp.bombs.objects.PlayGroundTriangleUp;
 import com.example.philipp.bombs.objects.PlayerBall;
 import com.example.philipp.bombs.objects.PlayGround;
+import com.example.philipp.bombs.objects.PowerUp;
 
 public class GameGLSurfaceView extends GLSurfaceView {
 
@@ -35,10 +36,13 @@ public class GameGLSurfaceView extends GLSurfaceView {
     private static float fallSpeed = 0f;
     private static boolean jump = false;
     private static boolean doubleJump = false;
+    private int powerUpCooldown = 45;
+    private long powerUpStartTime = System.currentTimeMillis();
 
     private ArrayList<Bomb> bombs = new ArrayList<Bomb>();
     private PlayerBall ball = new PlayerBall();
     private PlayGround terrain = new PlayGround();
+    private ArrayList<PowerUp> powerUps = new ArrayList<>();
 
 
     public GameGLSurfaceView(Context context) {
@@ -94,8 +98,9 @@ public class GameGLSurfaceView extends GLSurfaceView {
 
             // scene updates
             updateBall(fracSec);
-            updateBombs(fracSec, gl);
+            updateBombs(fracSec);
             updateTerrain(fracSec);
+            updatePowerUp(fracSec);
 
 
             // clear screen and depth buffer
@@ -112,6 +117,9 @@ public class GameGLSurfaceView extends GLSurfaceView {
             GLU.gluLookAt(gl, 0.0f, -y, ball.getZ() + 1.0f, 0.0f,0.0f, ball.getZ() + 1.0f, 0.0f,0.0f,1.0f);
             terrain.draw(gl);
             ball.draw(gl);
+            for (PowerUp powerUp: powerUps) {
+                powerUp.draw(gl);
+            }
             for (Bomb bomb : bombs) {
                 bomb.draw(gl);
                 bomb.explosion.draw(gl);
@@ -156,9 +164,150 @@ public class GameGLSurfaceView extends GLSurfaceView {
                 return true;
             return false;
         }
+        private void updatePowerUp(float fracSec) {
+            ArrayList<PowerUp> powerUpsToBeRemoved = new ArrayList<>();
+            for (PowerUp powerUp : powerUps) {
+                if (terrain.objectToGroundCollision(powerUp)) {
+                    powerUp.setZ(terrain.getCollisionZ() + powerUp.scale / 2);
+                    if (powerUp.fallSpeed > -0.5 && powerUp.fallSpeed < 0.0f) {
+                        powerUp.fallSpeed = 0f;
+                    } else {
+                        powerUp.fallSpeed = (powerUp.fallSpeed / 2.0f) * (-1);
+                    }
+                    if (powerUp.velocity[0] > 0f) {
+                        if (powerUp.velocity[0] <= 0.2f) {
+                            powerUp.velocity[0] = 0f;
+                        } else {
+                            powerUp.velocity[0] -= 0.0981f;
+                        }
+                    } else if (powerUp.velocity[0] < 0f) {
+                        if (powerUp.velocity[0] >= -0.2f) {
+                            powerUp.velocity[0] = 0f;
+                        } else {
+                            powerUp.velocity[0] += 0.0981f;
+                        }
+                    }
+                }
+                if (powerUp.fallSpeed >= maxFallSpeed && !(terrain.objectToGroundCollision(powerUp))) {
+                    powerUp.fallSpeed -= 0.0981f;
+                }
+            }
 
+            // position update on all obstacles
+            for (PowerUp powerUp : powerUps) {
+                powerUp.velocity[2] = powerUp.fallSpeed;
+                powerUp.update(fracSec);
+            }
+            for (PowerUp powerUp : powerUps) {
+                // offset makes sure that the obstacles don't get deleted or set
+                // inactive while visible to the player.
+                float offset = powerUp.scale;
 
-        private void updateBombs(float fracSec, GL10 gl) {
+                if (powerUp.getX() > boundaryRight - powerUp.scale / 2) {
+                    powerUp.setX(boundaryRight - powerUp.scale / 2);
+                    powerUp.setVelocity(-(powerUp.velocity[0]), powerUp.velocity[1], powerUp.velocity[2]);
+                }
+                if (powerUp.getX() < boundaryLeft + powerUp.scale / 2) {
+                    powerUp.setX(boundaryLeft + powerUp.scale / 2);
+                    powerUp.setVelocity(-(powerUp.velocity[0]), powerUp.velocity[1], powerUp.velocity[2]);
+
+                }
+                if (powerUp.getZ() > boundaryTop + offset) {
+                    powerUpsToBeRemoved.add(powerUp);
+                }
+            }
+            // remove obsolete obstacles
+            for (PowerUp powerUp : powerUpsToBeRemoved) {
+                powerUps.remove(powerUp);
+            }
+            powerUpsToBeRemoved.clear();
+            for (PowerUp powerUp : powerUps) {
+                if (areColliding(ball, powerUp)) {
+                    powerUpsToBeRemoved.add(powerUp);
+                    ball.heal(0.5f);
+                }
+            }
+            // remove obsolete obstacles
+            for (PowerUp powerUp : powerUpsToBeRemoved) {
+                powerUps.remove(powerUp);
+            }
+            powerUpsToBeRemoved.clear();
+            for (PowerUp powerUp : powerUps) {
+                if (powerUp.decay()) {
+                    powerUpsToBeRemoved.add(powerUp);
+                }
+            }
+            for (PowerUp powerUp : powerUpsToBeRemoved) {
+                powerUps.remove(powerUp);
+            }
+            powerUpsToBeRemoved.clear();
+            long currentTime = System.currentTimeMillis();
+            if ((int) ((currentTime - powerUpStartTime) / 1000) >= powerUpCooldown) {
+                float scale = 1.0f;
+                float spawnX = 0.0f;
+                float spawnZ = 0.0f;
+                float spawnOffset = scale * 0.5f;
+                float velocity[] = new float[3];
+
+                // determine source and destination quadrant
+                int sourceCode = ((Math.random() < 0.5 ? 0 : 1) << 1) | (Math.random() < 0.5 ? 0 : 1);  // source quadrant
+                int destCode = sourceCode ^ 3;    // destination quadrant is opposite of source
+                //Log.d("Code", sourceCode+" "+destCode);
+
+                /* sourceCode, destCode
+                 * +----+----+
+                 * | 00 | 01 |
+                 * +----+----+
+                 * | 10 | 11 |
+                 * +----+----+
+                 */
+
+                // calculate source vertex position, <0.5 horizontal, else vertical
+                if (Math.random() < 0.5) {
+                    spawnZ = ball.getZ() + 7.0f + spawnOffset;
+                    spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
+                } else {  // vertical placing, left or right
+                    spawnZ = (ball.getZ() + 7.0f)* (float) Math.random();
+                    spawnX = (sourceCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
+                }
+
+                // calculate destination vertex position, <0.5 horizontal, else vertical
+                if (Math.random() < 0.5) {  // horizontal placing, top or bottom
+                    velocity[2] = ball.getZ() - spawnOffset;
+                    velocity[0] = (destCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
+                } else {  // vertical placing, left or right
+                    velocity[2] = ball.getZ() * (float) Math.random();
+                    velocity[0] = (destCode & 1) > 0 ? boundaryRight + spawnOffset : boundaryLeft - spawnOffset;
+                }
+
+                // calculate velocity
+                velocity[0] -= spawnX;
+                velocity[2] -= spawnZ;
+                normalize(velocity);
+
+                boolean positionOk = true;
+
+                // check distance to player
+                float minPlayerDistance = 0.5f * scale + 0.5f * ball.scale + minSpawnDistanceToPlayer;
+                if (Math.abs(spawnX - ball.getX()) < minPlayerDistance &&
+                        Math.abs(spawnZ - ball.getZ()) < minPlayerDistance)
+                    positionOk = false;    // Distance to player too small -> invalid position
+
+                if (positionOk) {
+                    PowerUp newPowerUp = new PowerUp();
+                    newPowerUp.scale = scale;
+                    newPowerUp.randomizeRotationAxis();
+                    newPowerUp.angularVelocity = 50;
+                    newPowerUp.setPosition(spawnX, 0, spawnZ);
+                    newPowerUp.velocity = velocity;
+                    powerUps.add(newPowerUp);
+                    powerUpStartTime = System.currentTimeMillis();
+                    powerUpCooldown = newPowerUp.getCooldown();
+                }
+            }
+        }
+
+        private void updateBombs(float fracSec) {
             ArrayList<Bomb> bombsToBeRemoved = new ArrayList<Bomb>();
             // Bomb to Ground Collision
             for (Bomb bomb : bombs) {
