@@ -16,9 +16,9 @@ public class PlayGroundTriangleDown extends GameObject {
     public PlayGroundTriangleDown() {
         if (!buffersInitialized) {
             float vertices[] = {
-                    -0.5f, 0f, 0.5f,    // btl 0
-                    0.5f, 0f, 0.5f,    // bbl 1
-                    0f, 0f, -0.5f,    // bbr 2
+                    -0.5f, 0.5f, 0f,    // btl 0
+                    0.5f, 0.5f, 0f,    // bbl 1
+                    0f, -0.5f, 0f,    // bbr 2
             };
             short quads[] = {
                     0, 1, 2 // front

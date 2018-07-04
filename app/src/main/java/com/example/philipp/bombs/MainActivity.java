@@ -30,7 +30,6 @@ public class MainActivity extends Activity implements SensorEventListener {
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-
         gameGLSurfaceView = new GameGLSurfaceView(this);
         gameGLSurfaceView.context = this;
         setContentView(gameGLSurfaceView);

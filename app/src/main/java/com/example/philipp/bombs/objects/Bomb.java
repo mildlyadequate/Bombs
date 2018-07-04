@@ -32,21 +32,21 @@ public class Bomb extends GameObject {
     private static final float bomb_vertices[] = {
 
             0.5f, 0f, 0f,
-            0.462f, 0f, 0.191f,
-            0.354f, 0f, 0.354f,
-            0.191f, 0f, 0.462f,
-            0f, 0f, 0.5f,
-            -0.191f, 0f, 0.462f,
-            -0.354f, 0f, 0.354f,
-            -0.462f, 0f, 0.191f,
+            0.462f, 0.191f, 0f,
+            0.354f, 0.354f, 0f,
+            0.191f, 0.462f, 0f,
+            0f, 0.5f, 0f,
+            -0.191f, 0.462f, 0f,
+            -0.354f, 0.354f, 0f,
+            -0.462f, 0.191f, 0f,
             -0.5f, 0f, 0f,
-            -0.462f, 0f, -0.191f,
-            -0.354f, 0f, -0.354f,
-            -0.191f, 0f, -0.462f,
-            0f, 0f, -0.5f,
-            0.191f, 0f, -0.462f,
-            0.354f, 0f, -0.354f,
-            0.462f, 0f, -0.191f,
+            -0.462f, -0.191f, 0f,
+            -0.354f, -0.354f, 0f,
+            -0.191f, -0.462f, 0f,
+            0f, -0.5f, 0f,
+            0.191f, -0.462f, 0f,
+            0.354f, -0.354f, 0f,
+            0.462f, -0.191f, 0f
 
     };
     private static final short bomb_lines[] = {
@@ -106,7 +106,7 @@ public class Bomb extends GameObject {
 
             gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 
-            gl.glLineWidth(1.0f);
+            gl.glLineWidth(5.0f);
 
             gl.glRotatef(rotation, rotationAxis[0], rotationAxis[1], rotationAxis[2]);
             gl.glVertexPointer(3, GL10.GL_FLOAT, 0, bombVerticesBuffer);
@@ -130,8 +130,8 @@ public class Bomb extends GameObject {
 
     public void randomizeRotationAxis() {
         rotationAxis[0] = 0.0f;
-        rotationAxis[1] = (float) Math.random();
-        rotationAxis[2] = 0.0f;
+        rotationAxis[1] = 0.0f;
+        rotationAxis[2] = (float) Math.random();
         normalize(rotationAxis);
     }
 

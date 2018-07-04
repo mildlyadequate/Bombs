@@ -20,7 +20,7 @@ public class PlayGround extends GameObject {
     private int trianglesCount = 0;
     private boolean rotUp = false;
     private static float mX = -9.0f;
-    private static float mZ = -2.0f;
+    private static float mY = -2.0f;
     private boolean rowOffset = true;
 
     public PlayGround() {
@@ -57,17 +57,17 @@ public class PlayGround extends GameObject {
                     rowOffset = true;
                 }
 
-                mZ--;
+                mY--;
                 rotUp = false;
             }
             if (rotUp) {
                 PlayGroundTriangleUp newTriangle = new PlayGroundTriangleUp();
-                newTriangle.setPosition(mX++, 0.0f, mZ);
+                newTriangle.setPosition(mX++, mY, 0.0f);
                 newTriangle.setVelocity(0.0f, 0.0f, 0.0f);
                 trianglesUp.add(newTriangle);
             } else {
                 PlayGroundTriangleDown newTriangle = new PlayGroundTriangleDown();
-                newTriangle.setPosition(mX++, 0.0f, mZ);
+                newTriangle.setPosition(mX++, mY, 0.0f);
                 newTriangle.setVelocity(0.0f, 0.0f, 0.0f);
                 trianglesDown.add(newTriangle);
             }
@@ -80,12 +80,12 @@ public class PlayGround extends GameObject {
 
     public boolean objectToGroundCollision(GameObject obj1) {
         float obj1X = obj1.getX();
-        float obj1Z = obj1.getZ();
+        float obj1Y = obj1.getY();
         for (PlayGroundTriangleUp test : trianglesUp) {
             float obj2X = test.getX();
-            float obj2Z = test.getZ();
+            float obj2Y = test.getY();
             float squaredHitDistance = ((obj1.scale + test.scale) / 2) * ((obj1.scale + test.scale) / 2);
-            float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Z - obj2Z) * (obj1Z - obj2Z);
+            float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Y - obj2Y) * (obj1Y - obj2Y);
 
             if (squaredDistance < squaredHitDistance) {
                 collisionUp = test;
@@ -94,9 +94,9 @@ public class PlayGround extends GameObject {
         }
         for (PlayGroundTriangleDown test : trianglesDown) {
             float obj2X = test.getX();
-            float obj2Z = test.getZ();
+            float obj2Y = test.getY();
             float squaredHitDistance = ((obj1.scale + test.scale) / 2) * ((obj1.scale + test.scale) / 2);
-            float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Z - obj2Z) * (obj1Z - obj2Z);
+            float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Y - obj2Y) * (obj1Y - obj2Y);
 
             if (squaredDistance < squaredHitDistance) {
                 collisionDown = test;
@@ -105,16 +105,16 @@ public class PlayGround extends GameObject {
         }
         return false;
     }
-     public float getCollisionZ() {
+     public float getCollisionY() {
         if (collisionUp != null) {
-            float mZ = collisionUp.getZ() + collisionUp.scale / 2;
+            float mY = collisionUp.getY() + collisionUp.scale / 2;
             collisionUp = null;
-            return mZ;
+            return mY;
 
         } else if (collisionDown != null) {
-            float mZ = collisionDown.getZ() + collisionDown.scale / 2;
+            float mY = collisionDown.getY() + collisionDown.scale / 2;
             collisionDown = null;
-            return mZ;
+            return mY;
         } else {
             return 0.0f;
         }
@@ -134,7 +134,7 @@ public class PlayGround extends GameObject {
     public void update(float fracSec) {
         updatePosition(fracSec);
     }
-    public void removeObsolete(float ballZ) {
+    public void removeObsolete(float bally) {
         ArrayList<PlayGroundTriangleDown> downsToBeRemoved = new ArrayList<>();
         ArrayList<PlayGroundTriangleUp> upsToBeRemoved = new ArrayList<>();
         for (PlayGroundTriangleUp up : trianglesUp) {
@@ -156,12 +156,12 @@ public class PlayGround extends GameObject {
         upsToBeRemoved.clear();
         downsToBeRemoved.clear();
         for (PlayGroundTriangleUp up : trianglesUp) {
-            if (up.getZ() > ballZ + 10.0f) {
+            if (up.getY() > bally + 10.0f) {
                 upsToBeRemoved.add(up);
             }
         }
         for (PlayGroundTriangleDown down : trianglesDown) {
-            if (down.getZ() > ballZ + 10.0f) {
+            if (down.getZ() > bally + 10.0f) {
                 downsToBeRemoved.add(down);
             }
         }
@@ -203,17 +203,17 @@ public class PlayGround extends GameObject {
                         rowOffset = true;
                     }
 
-                    mZ--;
+                    mY--;
                     rotUp = false;
                 }
                 if (rotUp) {
                     PlayGroundTriangleUp newTriangle = new PlayGroundTriangleUp();
-                    newTriangle.setPosition(mX++, 0.0f, mZ);
+                    newTriangle.setPosition(mX++, mY, 0.0f);
                     newTriangle.setVelocity(0.0f, 0.0f, 0.0f);
                     trianglesUp.add(newTriangle);
                 } else {
                     PlayGroundTriangleDown newTriangle = new PlayGroundTriangleDown();
-                    newTriangle.setPosition(mX++, 0.0f, mZ);
+                    newTriangle.setPosition(mX++, mY, 0.0f);
                     newTriangle.setVelocity(0.0f, 0.0f, 0.0f);
                     trianglesDown.add(newTriangle);
                 }

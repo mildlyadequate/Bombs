@@ -58,8 +58,8 @@ public class GameGLSurfaceView extends GLSurfaceView {
     }
 
     // called from sensor
-    public void setBallVelocity(float vx, float vy) {
-        ball.setVelocity(vx, vy, fallSpeed);
+    public void setBallVelocity(float vx, float vz) {
+        ball.setVelocity(-vx, fallSpeed, vz);
     }
     //jump
     @Override
@@ -116,9 +116,9 @@ public class GameGLSurfaceView extends GLSurfaceView {
             gl.glMatrixMode(GL10.GL_MODELVIEW);
             gl11.glLoadMatrixf(modelViewScene, 0);
             float desired_height = 10.0f;
-            float y = (float) (desired_height / 2 / Math.tan(45.0f / 2 * (Math.PI / 180.0f)));
+            float z = (float) (desired_height / 2 / Math.tan(45.0f / 2 * (Math.PI / 180.0f)));
             // look at the ball, but only move with it's z-axis
-            GLU.gluLookAt(gl, 0.0f, -y, ball.getZ() + 1.0f, 0.0f,0.0f, ball.getZ() + 1.0f, 0.0f,0.0f,1.0f);
+            GLU.gluLookAt(gl, 0.0f, ball.getY() + 1.0f, -z, 0.0f,ball.getY() + 1.0f, 0.0f, 0.0f,1.0f,0.0f);
             terrain.draw(gl);
             ball.draw(gl);
             for (PowerUp powerUp: powerUps) {
@@ -130,7 +130,6 @@ public class GameGLSurfaceView extends GLSurfaceView {
             }
         }
 
-
         private void updateBall(float fracSec) {
             ball.update(fracSec);
             // keep ball within window boundaries
@@ -140,7 +139,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
                 ball.setX(boundaryRight - ball.scale / 2);
             // Gravity
             if (terrain.objectToGroundCollision(ball)) {
-                ball.setZ(terrain.getCollisionZ() + ball.scale / 2);
+                ball.setY(terrain.getCollisionY() + ball.scale / 2);
                 if (fallSpeed > -0.5f && fallSpeed < -0.0f) {
                     fallSpeed = 0f;
                     jump = true;
@@ -158,11 +157,11 @@ public class GameGLSurfaceView extends GLSurfaceView {
 
         private boolean areColliding(GameObject obj1, GameObject obj2) {
             float obj1X = obj1.getX();
-            float obj1Z = obj1.getZ();
+            float obj1Y = obj1.getY();
             float obj2X = obj2.getX();
-            float obj2Z = obj2.getZ();
+            float obj2Y = obj2.getY();
             float squaredHitDistance = ((obj1.scale + obj2.scale) / 2) * ((obj1.scale + obj2.scale) / 2);
-            float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Z - obj2Z) * (obj1Z - obj2Z);
+            float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Y - obj2Y) * (obj1Y - obj2Y);
 
             if (squaredDistance < squaredHitDistance)
                 return true;
@@ -172,7 +171,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
             ArrayList<PowerUp> powerUpsToBeRemoved = new ArrayList<>();
             for (PowerUp powerUp : powerUps) {
                 if (terrain.objectToGroundCollision(powerUp)) {
-                    powerUp.setZ(terrain.getCollisionZ() + powerUp.scale / 2);
+                    powerUp.setY(terrain.getCollisionY() + powerUp.scale / 2);
                     if (powerUp.fallSpeed > -0.5 && powerUp.fallSpeed < 0.0f) {
                         powerUp.fallSpeed = 0f;
                     } else {
@@ -199,7 +198,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
 
             // position update on all obstacles
             for (PowerUp powerUp : powerUps) {
-                powerUp.velocity[2] = powerUp.fallSpeed;
+                powerUp.velocity[1] = powerUp.fallSpeed;
                 powerUp.update(fracSec);
             }
             for (PowerUp powerUp : powerUps) {
@@ -241,7 +240,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
             if ((int) ((currentTime - powerUpStartTime) / 1000) >= powerUpCooldown) {
                 float scale = 1.0f;
                 float spawnX = 0.0f;
-                float spawnZ = 0.0f;
+                float spawnY = 0.0f;
                 float spawnOffset = scale * 0.5f;
                 float velocity[] = new float[3];
 
@@ -260,7 +259,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
 
                 // calculate source vertex position, <0.5 horizontal, else vertical
                 // calculate source vertex position,
-                spawnZ = ball.getZ() + 6.0f + spawnOffset;
+                spawnY = ball.getY() + 6.0f + spawnOffset;
                 if (Math.random() < 0.5) {
                     spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
                 } else {
@@ -284,7 +283,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
                 // check distance to player
                 float minPlayerDistance = 0.5f * scale + 0.5f * ball.scale + minSpawnDistanceToPlayer;
                 if (Math.abs(spawnX - ball.getX()) < minPlayerDistance &&
-                        Math.abs(spawnZ - ball.getZ()) < minPlayerDistance)
+                        Math.abs(spawnY - ball.getY()) < minPlayerDistance)
                     positionOk = false;    // Distance to player too small -> invalid position
 
                 if (positionOk) {
@@ -292,7 +291,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
                     newPowerUp.scale = scale;
                     newPowerUp.randomizeRotationAxis();
                     newPowerUp.angularVelocity = 50;
-                    newPowerUp.setPosition(spawnX, 0, spawnZ);
+                    newPowerUp.setPosition(spawnX, spawnY, 0.0f);
                     newPowerUp.velocity = velocity;
                     powerUps.add(newPowerUp);
                     powerUpStartTime = System.currentTimeMillis();
@@ -306,7 +305,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
             // Bomb to Ground Collision
             for (Bomb bomb : bombs) {
                 if (terrain.objectToGroundCollision(bomb)) {
-                    bomb.setZ(terrain.getCollisionZ() + bomb.scale / 2);
+                    bomb.setY(terrain.getCollisionY() + bomb.scale / 2);
                     if (bomb.fallSpeed > -0.5 && bomb.fallSpeed < 0.0f) {
                         bomb.fallSpeed = 0f;
                     } else {
@@ -333,7 +332,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
 
             // position update on all obstacles
             for (Bomb bomb : bombs) {
-                bomb.velocity[2] = bomb.fallSpeed;
+                bomb.velocity[1] = bomb.fallSpeed;
                 bomb.update(fracSec);
             }
 
@@ -360,7 +359,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
             // TODO proper Bomb and Ball Collision handling
             for (Bomb bomb : bombs) {
                 if (areColliding(ball, bomb)) {
-                        bomb.setZ(ball.getZ() + ball.scale / 2 + bomb.scale / 2);
+                        bomb.setY(ball.getY() + ball.scale / 2 + bomb.scale / 2);
                         bomb.velocity[0] = ball.velocity[0];
                         bomb.fallSpeed = (bomb.fallSpeed / 2) * (-1);
                         bomb.update(fracSec);
@@ -437,7 +436,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
             if (bombCount > bombs.size() && (int) ((currentTime - bombSpawnTime) / 1000) >= bombSpawnCooldown) {
                     float scale = (float) Math.random() * (bombMaxScale - bombMinScale) + bombMinScale;
                     float spawnX = 0.0f;
-                    float spawnZ = 0.0f;
+                    float spawnY = 0.0f;
                     float spawnOffset = scale * 0.5f;
                     float velocity[] = new float[3];
 
@@ -455,7 +454,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
                      */
 
                     // calculate source vertex position,
-                     spawnZ = ball.getZ() + 9.0f + spawnOffset;
+                     spawnY = ball.getY() + 9.0f + spawnOffset;
                      if (Math.random() < 0.5) {
                          spawnX = (sourceCode & 1) > 0 ? boundaryRight * (float) Math.random() : boundaryLeft * (float) Math.random();
                      } else {
@@ -483,14 +482,14 @@ public class GameGLSurfaceView extends GLSurfaceView {
                     for (Bomb bomb : bombs) {
                         float minDistance = 0.5f * scale + 0.5f * bomb.scale + minSpawnDistanceBetweenBombs;
                         if (Math.abs(spawnX - bomb.getX()) < minDistance
-                                && Math.abs(spawnZ - bomb.getZ()) < minDistance)
+                                && Math.abs(spawnY - bomb.getY()) < minDistance)
                             positionOk = false;    // Distance too small -> invalid position
                     }
 
                     // check distance to player
                     float minPlayerDistance = 0.5f * scale + 0.5f * ball.scale + minSpawnDistanceToPlayer;
                     if (Math.abs(spawnX - ball.getX()) < minPlayerDistance &&
-                            Math.abs(spawnZ - ball.getZ()) < minPlayerDistance)
+                            Math.abs(spawnY - ball.getY()) < minPlayerDistance)
                         positionOk = false;    // Distance to player too small -> invalid position
 
                     if (positionOk) {
@@ -498,7 +497,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
                         newBomb.scale = scale;
                         newBomb.randomizeRotationAxis();
                         newBomb.angularVelocity = 50;
-                        newBomb.setPosition(spawnX, 0, spawnZ);
+                        newBomb.setPosition(spawnX, spawnY, 0.0f);
                         newBomb.velocity = velocity;
                         bombs.add(newBomb);
                         bombSpawnCooldown = bombMinCooldown + (int) (Math.random() * ((bombMaxCooldown - bombMinCooldown) + 1));
@@ -516,18 +515,18 @@ public class GameGLSurfaceView extends GLSurfaceView {
             }
         }
         private void updateTerrain(float fracSec) {
-            terrain.setPosition(0.0f, 0.0f, -14.0f);
+            terrain.setPosition(0.0f, -14.0f, 0.0f);
             // velocity of the terrain must always be 0
             terrain.setVelocity(0.0f,0.0f,0.0f);
             // add new Terrain at the bottom to ensure endless game
             for (Bomb bomb : bombs) {
-                if (bomb.getZ() < terrainLimit || ball.getZ() < terrainLimit) {
+                if (bomb.getY() < terrainLimit || ball.getY() < terrainLimit) {
                     terrainLimit--;
                     terrain.addRow();
                 }
             }
             // remove Rows that are too far at the top in order to save performance
-            terrain.removeObsolete(ball.getZ());
+            terrain.removeObsolete(ball.getY());
             terrain.update(fracSec);
         }
 

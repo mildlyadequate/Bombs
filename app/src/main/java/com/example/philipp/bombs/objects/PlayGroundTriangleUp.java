@@ -16,9 +16,9 @@ public class PlayGroundTriangleUp extends GameObject {
     public PlayGroundTriangleUp() {
         if (!buffersInitialized) {
             float vertices[] = {
-                    -0.5f, 0f, -0.5f,    // btl 0
-                    0.5f, 0f, -0.5f,    // bbl 1
-                    0f, 0f, 0.5f,    // bbr 2
+                    -0.5f, -0.5f, 0f,    // btl 0
+                    0.5f, -0.5f, 0f,    // bbl 1
+                    0f, 0.5f, 0f,    // bbr 2
             };
             short quads[] = {
                     0, 1, 2, 0 // front
@@ -52,7 +52,6 @@ public class PlayGroundTriangleUp extends GameObject {
             gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
 
             gl.glLineWidth(1.0f);
-
             gl.glVertexPointer(3, GL10.GL_FLOAT, 0, triangleVerticesBuffer);
             gl.glColor4f(0.0f, 1.0f, 0.0f, 0.0f);
             for (int i = 0; i < (triangleQuadsBuffer.capacity() / 4); i++) {
