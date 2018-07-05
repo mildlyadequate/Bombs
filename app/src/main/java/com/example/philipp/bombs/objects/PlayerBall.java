@@ -472,11 +472,11 @@ public class PlayerBall extends GameObject {
 
     private void setRingColor(GL10 gl) {
         float r, g, b;
-        if (ringHealth > 0.6f) {
+        if (ringHealth > 0.75f) {
             r = colorEnergyHigh[0];
             g = colorEnergyHigh[1];
             b = colorEnergyHigh[2];
-        } else if (ringHealth > 0.2f) {
+        } else if (ringHealth > 0.25f) {
             r = colorEnergyMedium[0];
             g = colorEnergyMedium[1];
             b = colorEnergyMedium[2];

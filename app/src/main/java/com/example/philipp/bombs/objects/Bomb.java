@@ -18,8 +18,8 @@ public class Bomb extends GameObject {
     public float angularVelocity = 0.0f;
     public float rotationAxis[] = {0.0f, 1.0f, 0.0f};
 
-    private static float colorA[] = {0.85f, 0.85f, 0.85f};
-    private static float colorB[] = {0.7f, 0.7f, 0.7f};
+    private static float colorA[] = {0.75f, 0.75f, 0.75f};
+    private static float colorB[] = {0.6f, 0.6f, 0.6f};
 
     private float currentColor[] = new float[3];
     public long explosionTimer = System.currentTimeMillis();
@@ -110,7 +110,7 @@ public class Bomb extends GameObject {
 
             gl.glRotatef(rotation, rotationAxis[0], rotationAxis[1], rotationAxis[2]);
             gl.glVertexPointer(3, GL10.GL_FLOAT, 0, bombVerticesBuffer);
-            gl.glColor4f(currentColor[0], currentColor[1], currentColor[2], 0);
+            setCurrentColor(gl);
             for (int i = 0; i < (bomb_lines.length / 2); i++) {
                 bombTrianglesBuffer.position(2 * i);
                 gl.glDrawElements(GL10.GL_LINE_LOOP, 2, GL10.GL_UNSIGNED_SHORT, bombTrianglesBuffer);
@@ -133,6 +133,32 @@ public class Bomb extends GameObject {
         rotationAxis[1] = 0.0f;
         rotationAxis[2] = (float) Math.random();
         normalize(rotationAxis);
+    }
+    private void setCurrentColor(GL10 gl) {
+        float r, g, b;
+        long currentTime = System.currentTimeMillis();
+        if ((explosionDelay - 3) == (int) ((currentTime - explosionTimer) / 1000)) {
+            r = 0.8f;
+            g = currentColor[1] * 0.66f;
+            b = currentColor[2] * 0.66f;
+        } else if ((explosionDelay - 2) == (int) ((currentTime - explosionTimer) / 1000)) {
+            r = 0.9f;
+            g = currentColor[1] * 0.33f;
+            b = currentColor[2] * 0.33f;
+        } else if ((explosionDelay - 1) == (int) ((currentTime - explosionTimer) / 1000)) {
+            r = 1.0f;
+            g = currentColor[1] * 0.0f;
+            b = currentColor[2] * 0.0f;
+        } else if (!exploded){
+            r = currentColor[0];
+            g = currentColor[1];
+            b = currentColor[2];
+        } else {
+            r = 0;
+            g = 0;
+            b = 0;
+        }
+        gl.glColor4f(r, g, b, 0);
     }
 
     public void randomizeColor() {

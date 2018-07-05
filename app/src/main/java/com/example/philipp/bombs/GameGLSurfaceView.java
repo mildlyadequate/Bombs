@@ -128,6 +128,9 @@ public class GameGLSurfaceView extends GLSurfaceView {
                 bomb.draw(gl);
                 bomb.explosion.draw(gl);
             }
+            if (ball.getRingHealth() <= 0.0f) {
+                setRenderMode(RENDERMODE_WHEN_DIRTY);
+            }
         }
 
         private void updateBall(float fracSec) {
