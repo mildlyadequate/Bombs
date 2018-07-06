@@ -81,9 +81,11 @@ public class PlayGround extends GameObject {
     public boolean objectToGroundCollision(GameObject obj1) {
         float obj1X = obj1.getX();
         float obj1Y = obj1.getY();
+        float obj1scale = obj1.scale / 2;
         for (PlayGroundTriangleUp test : trianglesUp) {
             float obj2X = test.getX();
             float obj2Y = test.getY();
+            float obj2scale = test.scale / 2;
             float squaredHitDistance = ((obj1.scale + test.scale) / 2) * ((obj1.scale + test.scale) / 2);
             float squaredDistance = (obj1X - obj2X) * (obj1X - obj2X) + (obj1Y - obj2Y) * (obj1Y - obj2Y);
 
@@ -105,20 +107,20 @@ public class PlayGround extends GameObject {
         }
         return false;
     }
-     public float getCollisionY() {
-        if (collisionUp != null) {
-            float mY = collisionUp.getY() + collisionUp.scale / 2;
-            collisionUp = null;
-            return mY;
+        public float getCollisionY() {
+            if (collisionUp != null) {
+                float mY = collisionUp.getY() + collisionUp.scale / 2;
+                collisionUp = null;
+                return mY;
 
-        } else if (collisionDown != null) {
-            float mY = collisionDown.getY() + collisionDown.scale / 2;
-            collisionDown = null;
-            return mY;
-        } else {
-            return 0.0f;
+            } else if (collisionDown != null) {
+                float mY = collisionDown.getY() + collisionDown.scale / 2;
+                collisionDown = null;
+                return mY;
+            } else {
+                return 0.0f;
+            }
         }
-     }
 
     @Override
     public void draw(GL10 gl) {

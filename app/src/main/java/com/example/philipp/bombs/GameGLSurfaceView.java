@@ -362,8 +362,7 @@ public class GameGLSurfaceView extends GLSurfaceView {
             // TODO proper Bomb and Ball Collision handling
             for (Bomb bomb : bombs) {
                 if (areColliding(ball, bomb)) {
-                        bomb.setY(ball.getY() + ball.scale / 2 + bomb.scale / 2);
-                        bomb.velocity[0] = ball.velocity[0];
+                        bomb.velocity[0] = ball.velocity[0] + ball.velocity[0] / 2;
                         bomb.fallSpeed = (bomb.fallSpeed / 2) * (-1);
                         bomb.update(fracSec);
                 }

@@ -149,8 +149,8 @@ public class PowerUp extends GameObject {
 
     public void randomizeRotationAxis() {
         rotationAxis[0] = 0.0f;
-        rotationAxis[1] = (float) Math.random();
-        rotationAxis[2] = 0.0f;
+        rotationAxis[1] = 0.0f;
+        rotationAxis[2] = (float) Math.random();
         normalize(rotationAxis);
     }
     private void setCurrentColor(GL10 gl) {
